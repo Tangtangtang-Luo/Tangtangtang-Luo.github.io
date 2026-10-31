@@ -1,0 +1,69 @@
+name: Import approved personal website
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify destination and preserve old website
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "Tangtangtang-Luo/Tangtangtang-Luo.github.io"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -f _config.yml
+          git merge-base --is-ancestor 090b079d5fac3a17fc472fd510c21e4ce034afa4 HEAD
+          git push origin 090b079d5fac3a17fc472fd510c21e4ce034afa4:refs/heads/backup-before-redesign-2026-11-01
+      - name: Download and verify approved website
+        shell: python
+        run: |
+          import hashlib, os, pathlib, urllib.request
+          base = 'https://shenghan-luo-research.almond-tiger-0745.chatgpt.site/'
+          files = {
+            'index.html': '573cad39d09e2e4f798520c2ea05c983343ebbad92d1165062292cf29df84d92',
+            'site.js': '4c036fecd240f4f76501f1b834fd4636bd302d25220a945001d6c23ec071be97',
+            'styles.css': '7bec8ddf1fb75022b6c1c5ece17c011fd36a322629dea948e0270bd602731de2',
+            'assets/agent-privacy-concept.png': 'dd1c936bfa11bb5a707471f492c14c6478814667a46d1ad6922d2cfd0e6a3f06',
+            'assets/collaborative-perception-concept.png': 'edc20794004ace36d2f21385e2183192387abc0ed78384ad8afff98d23f36261',
+            'assets/CV-Shenghan-Luo.pdf': 'd7b771cbc0f0a2bd1e770661e550aed84db9295466b4e8c1f2bf0cc6d5ee431b',
+            'assets/favicon.svg': '014e2c2a2d015540e1e58455c115f87b37161019a1b26d14794188c59decdfa0',
+            'assets/figure-sources.json': '306f1855511cbe0a75453bd488116d114b181d950bc90df2f4bd2f46f471c3b4',
+            'assets/procrustes-validation.png': '61830ed08965406dd5a646cca26cab62d52daf4f81a42ed26ddf9c63c5b0d4aa',
+            'assets/research-manifold-optimization.png': '33129aa775087e4eb6ca3ceab0c3f9eed18565a95ba84bdbd023cf2eca1722c1',
+            'assets/skysense-framework.png': '9ba9269184805053296855af1a5368726f276264e88f53814413298e68a3ed4c'
+          }
+          dest = pathlib.Path(os.environ['RUNNER_TEMP']) / 'approved-personal-site'
+          dest.mkdir()
+          for name, expected in files.items():
+              req = urllib.request.Request(base + name, headers={'User-Agent': 'ShenghanWebsiteMigration/1.0'})
+              with urllib.request.urlopen(req, timeout=90) as response:
+                  content = response.read()
+              actual = hashlib.sha256(content).hexdigest()
+              if actual != expected:
+                  raise RuntimeError('Checksum mismatch: ' + name + ' actual=' + actual)
+              target = dest / name
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(content)
+              print('Verified', name, len(content))
+          (dest / '.nojekyll').write_text('')
+          (dest / 'README.md').write_text(chr(10).join(['# Shenghan Luo - Academic Website', '', 'Live site: https://tangtangtang-luo.github.io/', '', 'Bilingual, responsive static website. Edit index.html, styles.css, site.js and assets. GitHub Pages publishes the main branch root without a build step.', '', 'Previous website: backup-before-redesign-2026-11-01 branch.', '', 'The collaborative perception and agent privacy concept illustrations were generated with an image model. Manifold figure: Fei et al. (2023), Figure 3, https://arxiv.org/abs/2302.08210v1. Publication figures are from the respective papers. Source details: assets/figure-sources.json.', '']), encoding='utf-8')
+      - name: Replace old template with verified static website
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          cp .github/workflows/migrate-site.yml "$RUNNER_TEMP/migrate-site.yml"
+          git rm -r --quiet .
+          cp -a "$RUNNER_TEMP/approved-personal-site/." .
+          mkdir -p .github/workflows
+          cp "$RUNNER_TEMP/migrate-site.yml" .github/workflows/migrate-site.yml
+          git add index.html styles.css site.js assets .nojekyll README.md .github/workflows/migrate-site.yml
+          git commit -m 'feat: replace al-folio with redesigned academic website'
+          git push origin HEAD:main
