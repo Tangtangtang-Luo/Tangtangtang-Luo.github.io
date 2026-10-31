@@ -20,11 +20,14 @@ jobs:
           test -f _config.yml
           git merge-base --is-ancestor 090b079d5fac3a17fc472fd510c21e4ce034afa4 HEAD
           git push origin 090b079d5fac3a17fc472fd510c21e4ce034afa4:refs/heads/backup-before-redesign-2026-11-01
-      - name: Download and verify approved website
+      - name: Extract and verify approved website
         shell: python
         run: |
-          import hashlib, os, pathlib, urllib.request
-          base = 'https://shenghan-luo-research.almond-tiger-0745.chatgpt.site/'
+          import hashlib, os, pathlib, zipfile
+          archive = pathlib.Path('approved-personal-site.zip')
+          if hashlib.sha256(archive.read_bytes()).hexdigest() != '61e679fedce0ef4fffbb17a3edb10c1d55f30c7aa10e022e123fd901c9e8ce5a':
+              raise RuntimeError('Archive checksum mismatch')
+          source = zipfile.ZipFile(archive)
           files = {
             'index.html': '573cad39d09e2e4f798520c2ea05c983343ebbad92d1165062292cf29df84d92',
             'site.js': '4c036fecd240f4f76501f1b834fd4636bd302d25220a945001d6c23ec071be97',
@@ -41,9 +44,7 @@ jobs:
           dest = pathlib.Path(os.environ['RUNNER_TEMP']) / 'approved-personal-site'
           dest.mkdir()
           for name, expected in files.items():
-              req = urllib.request.Request(base + name, headers={'User-Agent': 'ShenghanWebsiteMigration/1.0'})
-              with urllib.request.urlopen(req, timeout=90) as response:
-                  content = response.read()
+              content = source.read(name)
               actual = hashlib.sha256(content).hexdigest()
               if actual != expected:
                   raise RuntimeError('Checksum mismatch: ' + name + ' actual=' + actual)
