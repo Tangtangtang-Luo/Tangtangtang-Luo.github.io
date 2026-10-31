@@ -1,0 +1,53 @@
+[
+  {
+    "id": "2504.12696",
+    "version": "v2",
+    "page": 4,
+    "rect": [
+      48,
+      54,
+      564,
+      247
+    ],
+    "name": "research-collaborative-perception.png",
+    "author": "Wang et al.",
+    "year": "2025",
+    "figure": "4",
+    "title": "Collaborative Perception Datasets for Autonomous Driving: A Review",
+    "alt": "V2X collaborative perception scene showing vehicle, roadside and cloud connections, perception ranges and blind spots."
+  },
+  {
+    "id": "2302.08210",
+    "version": "v1",
+    "page": 4,
+    "rect": [
+      194,
+      122,
+      416,
+      260
+    ],
+    "name": "research-manifold-optimization.png",
+    "author": "Fei et al.",
+    "year": "2023",
+    "figure": "3",
+    "title": "A Survey of Geometric Optimization for Deep Learning: From Euclidean Space to Riemannian Manifold",
+    "alt": "Geometric gradient descent on a manifold, showing the tangent plane, Riemannian gradient, geodesic and retraction."
+  },
+  {
+    "id": "2411.09523",
+    "version": "v1",
+    "page": 1,
+    "rect": [
+      120,
+      94,
+      516,
+      229
+    ],
+    "name": "research-agent-security.png",
+    "author": "Gan et al.",
+    "year": "2024",
+    "figure": "1",
+    "title": "Navigating the Risks: A Survey of Security, Privacy, and Ethics Threats in LLM-Based Agents",
+    "alt": "Taxonomy of LLM-agent risks linking input sources and model flaws to security, privacy and ethics threats."
+  }
+]
